@@ -9,8 +9,8 @@ function Cart({ closeCart, onRemove, items = [] }) {
                 {items.length > 0 ? (
                     <div>
                         <div className="items">
-                            {items.map((item,index) =>
-                                <div key={item.index} className="cartItem d-flex align-center mb-20">
+                            {items.map((item) =>
+                                <div key={item.id} className="cartItem d-flex align-center mb-20">
                                     <div style={{ backgroundImage: `url(${item.imgUrl})` }}
                                         className="cartItemImg mr-20"
                                     ></div>

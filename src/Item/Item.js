@@ -1,10 +1,10 @@
 import styles from './Item.module.scss';
 import React from 'react';
-function Item({title, price, imgUrl, addToCart}) {
+function Item({title, price, imgUrl,id,  addToCart}) {
 const [isAdded, setIsAdded] = React.useState(false);
 const[isFavourite,setIsFavourite ] = React.useState(false);
  const onClickAdd = () => {
-  addToCart({title, price, imgUrl});
+  addToCart({title, price, imgUrl, id});
   setIsAdded(!isAdded);
  };
  const onClickFavourite = () =>{
@@ -17,14 +17,12 @@ const[isFavourite,setIsFavourite ] = React.useState(false);
  useEffect виконує код всередині
  Реагує на на зміну пропса або стейту 
 */
-
-
   return(
   <div  className={styles.card}>
     <div className={styles.noFavourite} >
       <img onClick={onClickFavourite}  src = {isFavourite ? "/img/favourite.jpg" : "/img/heart-unliked.svg"} alt="btn unlike" />
     </div>
-    <img className={styles.shoes} src= {imgUrl} alt="sneakers"></img>
+    <img className={styles.shoes} src= {imgUrl} alt="sneakers"/>
     <h5>
       {title}
     </h5>
