@@ -1,4 +1,5 @@
-function Header(props) {
+import style from './Header.module.scss'
+function Header({showCart}) {
     return (
         <div className="header d-flex justify-between alighn-center p-40">
             <div className="d-flex align-center">
@@ -8,13 +9,16 @@ function Header(props) {
                     <p>Best sneakers seller!</p>
                 </div>
             </div>
-            <ul className="d-flex " onClick = {props.showCart}>
+            <ul className="d-flex ">
                 <li className="mr-30 cu-p ">
-                    <img className="cart" src="/img/cart.svg" alt=""></img>
-                    <span>55$</span>
+                    <img onClick = {showCart} className={style.cart} src="/img/cart.svg" alt=""></img>
+                    <span onClick = {showCart}>55$</span>
+                </li>
+                <li className = "mr-30 cu-p">
+                    <img className={style.favourites} alt = "favourite" src = '/img/heart-unliked.svg' />
                 </li>
                 <li>
-                    <img className="userIcon" src="/img/user-icon.svg" alt=""></img>
+                    <img className={style.userIcon} src="/img/user-icon.svg" alt="profile"></img>
                 </li>
             </ul>
         </div>

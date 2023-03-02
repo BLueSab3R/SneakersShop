@@ -12,19 +12,16 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const isMounted = useRef(false);
   const itemsCollectionRef = collection(db, "item")
-  const [counter,setCounter] = useState(0);
+  const [counter, setCounter] = useState(0);
+  const [favouriteItem, setFavoiriteItem] = useState([]);
   useEffect(() => {
     const getItems = async () => {
       try {
         setIsLoading(true);
         getCartItems();
+        getFavouriteItems();
         const item = await getDocs(itemsCollectionRef);
         setIsItem(item.docs.map((item) => ({ ...item.data(), id: item.id })))
-        // const item = await getDocs(itemsCollectionRef);
-        // setIsItem(item.docs.map((item) => ({ ...item.data(), id: item.id })))
-        // localStorage.setItem('cartItem', JSON.parse(JSON.stringify(cartItem)));
-        // const localCartItem = localStorage.getItem('cartItem')
-        // setCartItem(localCartItem);
       }
       catch (error) {
         throw error;
@@ -44,25 +41,37 @@ function App() {
     isMounted.current = true;
   }, [cartItem])
 
-  const getCartItems = ()=>{
-    if (!localStorage.getItem('cart' )){
+  useEffect(() => {
+    if (isMounted.current) {
+      const json = JSON.stringify(favouriteItem);
+      localStorage.setItem('favourites', json);
+    }
+    isMounted.current = true;
+  }, [favouriteItem])
+
+  const getCartItems = () => {
+    if (!localStorage.getItem('cart')) {
       localStorage.setItem('cart', JSON.stringify([]))
     }
-    if(JSON.parse(localStorage.getItem('cart')).length>0){
+    if (JSON.parse(localStorage.getItem('cart')).length > 0) {
       setCartItem(JSON.parse(localStorage.getItem('cart')))
     }
   }
-  const onAddtoCart = (obj) => {
-    setCartItem((prev) => [...prev, obj]);
-    const items = JSON.parse(localStorage.getItem('cart'));
-    localStorage.setItem('cart', JSON.stringify([...items,obj]))
-    console.log(obj.id);
+
+  const getFavouriteItems = () => {
+    if (!localStorage.getItem('favourites')) {
+      localStorage.setItem('favourites', JSON.stringify([]))
+    }
+    if (JSON.parse(localStorage.getItem('favourites')).length > 0) {
+      setFavoiriteItem(JSON.parse(localStorage.getItem('favourites')))
+    }
   }
+
   const removeItemCart = (id) => {
     setCartItem((items) => (items.filter(item => item.id != id)))
     const items = JSON.parse(localStorage.getItem('cart'));
     localStorage.setItem('cart', JSON.stringify(items.filter(item => item.id != id)));
-    setCounter(count => count+1)
+    setCounter(count => count + 1)
     // setCartItem((items) => items.filter(item => item.id != id))
     /*
      items має метод filter ->
@@ -76,6 +85,19 @@ function App() {
   const itemInCart = (item) => {
     const i = cartItem.filter(obj => obj.id === item.id);
     return i.length > 0;
+  }
+
+  const onAddtoCart = (obj) => {
+    setCartItem((prev) => [...prev, obj]);
+    const items = JSON.parse(localStorage.getItem('cart'));
+    localStorage.setItem('cart', JSON.stringify([...items, obj]));
+    console.log(obj.id);
+  }
+
+  const addToFavourite = (obj) => {
+    setFavoiriteItem((prev) => [...prev, obj]);
+    const items = JSON.parse(localStorage.getItem('favourites'));
+    localStorage.setItem('favourites', JSON.stringify([...items, obj]));
   }
 
   return (<>
@@ -99,7 +121,7 @@ function App() {
             </div>
           </div>
           {isItem.length > 0 &&
-            <div className="d-flex flex-wrap" key = {counter}>
+            <div className="d-flex flex-wrap" key={counter}>
               {isItem.filter(items => items.title.toLowerCase().includes(searchValue.toLowerCase()))
                 .map((item, index) => (
                   /*
@@ -115,7 +137,8 @@ function App() {
                     imgUrl={item.imgUrl}
                     id={item.id}
                     addToCart={(obj) => onAddtoCart(obj)}
-                    inCart = {itemInCart(item)}
+                    inCart={itemInCart(item)}
+                    addToFavourite={(obj) => addToFavourite(obj)}
                   />
                 ))}
             </div>

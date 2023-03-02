@@ -1,6 +1,6 @@
 import styles from './Item.module.scss';
 import React from 'react';
-function Item({title, price, imgUrl,id, addToCart, inCart}) {
+function Item({title, price, imgUrl,id, addToCart, inCart, addToFavourite}) {
 const [isAdded, setIsAdded] = React.useState(inCart);
 const[isFavourite,setIsFavourite ] = React.useState(false);
  const onClickAdd = () => {
@@ -8,6 +8,7 @@ const[isFavourite,setIsFavourite ] = React.useState(false);
   setIsAdded(!isAdded);
  };
  const onClickFavourite = () =>{
+  addToFavourite({title, price, imgUrl, id});
   setIsFavourite(!isFavourite);
  }
  React.useEffect( () =>{
