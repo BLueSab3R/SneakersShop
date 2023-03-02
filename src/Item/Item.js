@@ -1,7 +1,7 @@
 import styles from './Item.module.scss';
 import React from 'react';
-function Item({title, price, imgUrl,id,  addToCart}) {
-const [isAdded, setIsAdded] = React.useState(false);
+function Item({title, price, imgUrl,id,  addToCart, inCart}) {
+const [isAdded, setIsAdded] = React.useState(inCart);
 const[isFavourite,setIsFavourite ] = React.useState(false);
  const onClickAdd = () => {
   addToCart({title, price, imgUrl, id});

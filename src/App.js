@@ -11,16 +11,14 @@ function App() {
   const [searchValue, setSearchValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const isMounted = useRef(false);
-  const itemsCollectionRef = collection(db, "item")
+  const itemsCollectionRef = collection(db, "item");
+  const [counter, setCounter] = useState(0);
+
   useEffect(() => {
     const getItems = async () => {
       try {
         setIsLoading(true);
-        if (localStorage.getItem('cartItem') != null){
-          localStorage.setItem('cartItem', JSON.parse(JSON.stringify(cartItem)));
-          const localCartItem = localStorage.getItem('cartItem')
-          setCartItem(localCartItem);
-        }
+        getCartItems();
         const item = await getDocs(itemsCollectionRef);
         setIsItem(item.docs.map((item) => ({ ...item.data(), id: item.id })))
         // const item = await getDocs(itemsCollectionRef);
@@ -39,21 +37,28 @@ function App() {
     getItems();
   }, []);
 
-  useEffect(() => {
-    if (isMounted.current) {
-      const json = JSON.stringify(cartItem);
-      localStorage.setItem('cart', json);
+  const getCartItems = () => {
+    if (! localStorage.getItem('cart')) {
+      localStorage.setItem('cart', JSON.stringify([]));
     }
-    isMounted.current = true;
-  }, [cartItem])
 
+    if (JSON.parse(localStorage.getItem('cart')).length > 0){
+      setCartItem(JSON.parse(localStorage.getItem('cart')));
+    }
+  }
 
   const onAddtoCart = (obj) => {
     setCartItem((prev) => [...prev, obj]);
+    const items = JSON.parse(localStorage.getItem('cart'));
+    localStorage.setItem('cart', JSON.stringify([...items, obj]));
     console.log(obj.id);
   }
   const removeItemCart = (id) => {
     setCartItem((items) => (items.filter(item => item.id != id)))
+    const items = JSON.parse(localStorage.getItem('cart'));
+    localStorage.setItem('cart', JSON.stringify(items.filter(item => item.id != id)));
+    setCounter(count => count + 1);
+
     // setCartItem((items) => items.filter(item => item.id != id))
     /*
      items має метод filter ->
@@ -71,6 +76,13 @@ function App() {
   //   console.log(items.title.toLowerCase().includes('nike'))
   // })
   // items = {cartItem}
+
+  const itemInCart = (item) => {
+    console.log(item.id)
+    const i = cartItem.filter(it => it.id === item.id);
+    return i.length > 0;
+  }
+
   return (<>
     {!isLoading && (
       <div className="wrapper clear">
@@ -92,9 +104,9 @@ function App() {
             </div>
           </div>
           {isItem.length > 0 &&
-            <div className="d-flex flex-wrap">
+            <div className="d-flex flex-wrap" key={counter}>
               {isItem.filter(items => items.title.toLowerCase().includes(searchValue.toLowerCase()))
-                .map((items, index) => (
+                .map((item, index) => (
                   /*
                   isItem використовую метод fitler
                   створюю колбек items, потім використовую метод includes до імені
@@ -103,11 +115,12 @@ function App() {
                   */
                   <Item
                     key={index}
-                    title={items.title}
-                    price={items.price}
-                    imgUrl={items.imgUrl}
-                    id={items.id}
+                    title={item.title}
+                    price={item.price}
+                    imgUrl={item.imgUrl}
+                    id={item.id}
                     addToCart={(obj) => onAddtoCart(obj)}
+                    inCart={itemInCart(item)}
                   />
                 ))}
             </div>
