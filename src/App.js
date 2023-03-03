@@ -1,9 +1,11 @@
-import Item from "./Item/Item";
 import Header from "./Header/Header";
 import Cart from "./Cart/Cart";
 import { db } from './firebase-config';
 import { useEffect, useState, useRef } from "react";
+import Favourites from './pages/Favourites'
 import { collection, doc, getDocs } from 'firebase/firestore'
+import { Route, BrowserRouter, Routes } from 'react-router-dom';
+import Home from "./pages/Home";
 function App() {
   const [isItem, setIsItem] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -91,7 +93,6 @@ function App() {
     setCartItem((prev) => [...prev, obj]);
     const items = JSON.parse(localStorage.getItem('cart'));
     localStorage.setItem('cart', JSON.stringify([...items, obj]));
-    console.log(obj.id);
   }
 
   const addToFavourite = (obj) => {
@@ -100,6 +101,7 @@ function App() {
     localStorage.setItem('favourites', JSON.stringify([...items, obj]));
   }
 
+
   return (<>
     {!isLoading && (
       <div className="wrapper clear">
@@ -107,46 +109,34 @@ function App() {
         <Header showCart={(() => setIsCartOpen(!isCartOpen))} />
         {/* !isCartOpen - це інверсія і тому переводиться у протилежну сторону */}
         <hr></hr>
-        <div className="content  p-40 ">
-          <div className="d-flex align-center  justify-between mb-40">
-            <h1>{searchValue ? `Search by request:"${searchValue}" ` : "All sneakers"}</h1>
-            {/* якщо хочаб щось є searchValue */}
-            <div className="searchBlock d-flex">
-              <img src="/img/search.png" alt="search"></img>
-              {searchValue && <img onClick={() => { setSearchValue('') }}
-                className="clear cu-p"
-                src='/img/remove-button.svg'
-                alt='Remove' />}
-              <input onChange={onChangeSearchInput} value={searchValue} placeholder="Search..."></input>
-            </div>
-          </div>
-          {isItem.length > 0 &&
-            <div className="d-flex flex-wrap" key={counter}>
-              {isItem.filter(items => items.title.toLowerCase().includes(searchValue.toLowerCase()))
-                .map((item, index) => (
-                  /*
-                  isItem використовую метод fitler
-                  створюю колбек items, потім використовую метод includes до імені
-                  метод toLowerCase є лише на момент методу filter, далі не передається
-                  повертає items, які мають значення true 
-                  */
-                  <Item
-                    key={index}
-                    title={item.title}
-                    price={item.price}
-                    imgUrl={item.imgUrl}
-                    id={item.id}
-                    addToCart={(obj) => onAddtoCart(obj)}
-                    inCart={itemInCart(item)}
-                    addToFavourite={(obj) => addToFavourite(obj)}
-                  />
-                ))}
-            </div>
-          }
-        </div>
+        <Routes>
+          <Route path="/" exact
+            element={
+              <Home addToFavourite={addToFavourite}
+                isItem={isItem}
+                counter={counter}
+                setSearchValue={setSearchValue}
+                searchValue={searchValue}
+                onChangeSearchInput={onChangeSearchInput}
+                onAddtoCart={onAddtoCart}
+                itemInCart={itemInCart} />
+            }
+          />
+          <Route path="/favourites" exact
+            element={<Favourites
+              favouriteItem = {favouriteItem}
+              onAddtoCart = {onAddtoCart}
+              itemInCart={itemInCart}
+            />}
+          >
+
+          </Route>
+        </Routes>
+
       </div>
 
-    )}
+    )
+    }
   </>)
 }
 
