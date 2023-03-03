@@ -1,5 +1,5 @@
 import Item from "../Item/Item";
-function Home({ addToFavourite, isItem, counter, setSearchValue, searchValue, onChangeSearchInput, onAddtoCart, itemInCart }) {
+function Home({ addToFavourite, isItem, counter, setSearchValue, searchValue, onChangeSearchInput, onAddToCart, itemInCart }) {
     return (
         <>
             <div className="content  p-40 ">
@@ -25,7 +25,7 @@ function Home({ addToFavourite, isItem, counter, setSearchValue, searchValue, on
                                     price={item.price}
                                     imgUrl={item.imgUrl}
                                     id={item.id}
-                                    addToCart={(obj) => onAddtoCart(obj)}
+                                    addToCart={(obj) => onAddToCart(obj)}
                                     inCart={itemInCart(item)}
                                     addToFavourite={(obj) => addToFavourite(obj)}
                                 />

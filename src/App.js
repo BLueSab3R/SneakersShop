@@ -1,142 +1,123 @@
+import { useEffect, useState } from 'react';
+import { Route, Routes } from 'react-router-dom';
+
+import {useItems} from './hooks';
+
 import Header from "./Header/Header";
 import Cart from "./Cart/Cart";
-import { db } from './firebase-config';
-import { useEffect, useState, useRef } from "react";
-import Favourites from './pages/Favourites'
-import { collection, doc, getDocs } from 'firebase/firestore'
-import { Route, BrowserRouter, Routes } from 'react-router-dom';
 import Home from "./pages/Home";
+import Favourites from './pages/Favourites'
+import {addToStorage, getFromStorage} from './utils/localStorage';
+
 function App() {
-  const [isItem, setIsItem] = useState([]);
-  const [isCartOpen, setIsCartOpen] = useState(false);
-  const [cartItem, setCartItem] = useState([]);
+  const [items, setItems] = useState([]);
+  const [isCartOpen, setCartOpen] = useState(false);
+  const [cartItems, setCartItems] = useState([]);
+  const [favouriteItems, setFavouriteItems] = useState([]);
   const [searchValue, setSearchValue] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const isMounted = useRef(false);
-  const itemsCollectionRef = collection(db, "item")
+  const [isLoading, setLoading] = useState(false);
   const [counter, setCounter] = useState(0);
-  const [favouriteItem, setFavoiriteItem] = useState([]);
+
+  const {
+    getItems,
+    getCartItems,
+    getFavouriteItems
+  } = useItems();
+
   useEffect(() => {
-    const getItems = async () => {
-      try {
-        setIsLoading(true);
-        getCartItems();
-        getFavouriteItems();
-        const item = await getDocs(itemsCollectionRef);
-        setIsItem(item.docs.map((item) => ({ ...item.data(), id: item.id })))
-      }
-      catch (error) {
-        throw error;
-      }
-      finally {
-        setIsLoading(false);
-      }
-    };
-    getItems();
+    (async () => {
+      await retrieveItems();
+    })();
   }, []);
 
-  useEffect(() => {
-    if (isMounted.current) {
-      const json = JSON.stringify(cartItem);
-      localStorage.setItem('cart', json);
+  const retrieveItems = async () => {
+    try {
+      setLoading(true);
+      setCartItems(getCartItems());
+      setFavouriteItems(getFavouriteItems());
+      setItems(await getItems());
     }
-    isMounted.current = true;
-  }, [cartItem])
+    catch (error) {
+      throw error;
+    }
+    finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    if (isMounted.current) {
-      const json = JSON.stringify(favouriteItem);
-      localStorage.setItem('favourites', json);
-    }
-    isMounted.current = true;
-  }, [favouriteItem])
+    addToStorage('cart', cartItems);
+  }, [cartItems]);
 
-  const getCartItems = () => {
-    if (!localStorage.getItem('cart')) {
-      localStorage.setItem('cart', JSON.stringify([]))
-    }
-    if (JSON.parse(localStorage.getItem('cart')).length > 0) {
-      setCartItem(JSON.parse(localStorage.getItem('cart')))
-    }
-  }
+  useEffect(() => {
+    addToStorage('favourites', favouriteItems);
+  }, [favouriteItems]);
 
-  const getFavouriteItems = () => {
-    if (!localStorage.getItem('favourites')) {
-      localStorage.setItem('favourites', JSON.stringify([]))
-    }
-    if (JSON.parse(localStorage.getItem('favourites')).length > 0) {
-      setFavoiriteItem(JSON.parse(localStorage.getItem('favourites')))
-    }
+  const getFromCartStorage = () => {
+    return getFromStorage('cart');
   }
 
   const removeItemCart = (id) => {
-    setCartItem((items) => (items.filter(item => item.id != id)))
-    const items = JSON.parse(localStorage.getItem('cart'));
-    localStorage.setItem('cart', JSON.stringify(items.filter(item => item.id != id)));
-    setCounter(count => count + 1)
-    // setCartItem((items) => items.filter(item => item.id != id))
-    /*
-     items має метод filter ->
-    проходить по кожному елменту і шукає співпадіння ->
-    проходить пошук усіх id і шукає, той який не дорівнює тому, який передали
-     */
+    setCartItems((items) => (items.filter(item => item.id != id)))
+    const items = getFromCartStorage();
+    addToStorage('cart', JSON.stringify(items.filter(item => item.id != id)));
+    setCounter(count => count + 1);
   }
   const onChangeSearchInput = (event) => {
     setSearchValue(event.target.value);
   }
   const itemInCart = (item) => {
-    const i = cartItem.filter(obj => obj.id === item.id);
+    const i = cartItems.filter(obj => obj.id === item.id);
     return i.length > 0;
   }
 
-  const onAddtoCart = (obj) => {
-    setCartItem((prev) => [...prev, obj]);
-    const items = JSON.parse(localStorage.getItem('cart'));
-    localStorage.setItem('cart', JSON.stringify([...items, obj]));
+  const onAddToCart = (obj) => {
+    setCartItems((prev) => [...prev, obj]);
+    const items = getFromCartStorage();
+    addToStorage('cart', JSON.stringify([...items, obj]));
   }
 
   const addToFavourite = (obj) => {
-    setFavoiriteItem((prev) => [...prev, obj]);
+    setFavouriteItems((prev) => [...prev, obj]);
     const items = JSON.parse(localStorage.getItem('favourites'));
     localStorage.setItem('favourites', JSON.stringify([...items, obj]));
   }
 
-
   return (<>
     {!isLoading && (
       <div className="wrapper clear">
-        {isCartOpen ? <Cart onRemove={removeItemCart} items={cartItem} closeCart={(() => setIsCartOpen(!isCartOpen))} /> : null}
-        <Header showCart={(() => setIsCartOpen(!isCartOpen))} />
+        {isCartOpen && <Cart
+            onRemove={removeItemCart}
+            items={cartItems}
+            closeCart={(() => setCartOpen(!isCartOpen))}
+        />}
+        <Header
+            showCart={(() => setCartOpen(!isCartOpen))}
+        />
         {/* !isCartOpen - це інверсія і тому переводиться у протилежну сторону */}
         <hr></hr>
         <Routes>
           <Route path="/" exact
             element={
               <Home addToFavourite={addToFavourite}
-                isItem={isItem}
+                isItem={items}
                 counter={counter}
                 setSearchValue={setSearchValue}
                 searchValue={searchValue}
                 onChangeSearchInput={onChangeSearchInput}
-                onAddtoCart={onAddtoCart}
+                onAddToCart={onAddToCart}
                 itemInCart={itemInCart} />
             }
           />
           <Route path="/favourites" exact
             element={<Favourites
-              favouriteItem = {favouriteItem}
-              onAddtoCart = {onAddtoCart}
-              itemInCart={itemInCart}
+              favouriteItem = {favouriteItems}
             />}
           >
-
           </Route>
         </Routes>
-
       </div>
-
-    )
-    }
+    )}
   </>)
 }
 
